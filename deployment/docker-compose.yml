@@ -1,0 +1,14 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  ctf-platform:
+    build: .
+    container_name: ctf_web
+    ports:
+      - "80:5000"
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./data:/app/data
+      
+    restart: always

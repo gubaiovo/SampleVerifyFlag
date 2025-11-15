@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_title }} - {{ current_week.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --sidebar-width: 250px; 
+        }
+        
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 56px; 
+            bottom: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            background-color: #ffffff;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            overflow-y: auto;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .main-content {
+            padding-top: 20px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        @media (min-width: 992px) {
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+            
+            body.sidebar-toggled .sidebar {
+                transform: translateX(calc(var(--sidebar-width) * -1));
+            }
+            body.sidebar-toggled .main-content {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .sidebar {
+                width: 280px; 
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .nav-link.active {
+            background-color: var(--bs-primary);
+            color: white !important;
+        }
+        .nav-link { color: #333; }
+        .card-header-icon { font-size: 1.25rem; margin-right: 0.5rem; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark sticky-top" style="height: 56px;">
+        <div class="container-fluid">
+            <div>
+                <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <button class="btn btn-outline-light d-none d-lg-inline-block border-0" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <span class="navbar-brand mb-0 h1 ms-2">{{ site_title }}</span>
+            </div>
+            
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-person-circle me-2"></i>
+                    <strong>{{ username }}</strong>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark text-small shadow dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('stats') }}" target="_blank"><i class="bi bi-bar-chart-line me-2"></i>查看统计</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>退出登录</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="offcanvas-lg offcanvas-start sidebar p-3" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header d-lg-none">
+            <h5 class="offcanvas-title" id="sidebarLabel">导航</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column p-0">
+            <h5 class="d-none d-lg-block border-bottom pb-2 mb-3">进度</h5>
+            <div class="nav nav-pills flex-column">
+                {% for week in weeks %}
+                <a class="nav-link mb-2 {% if week.id == current_week.id %}active{% endif %}" 
+                   href="{{ url_for('show_week', week_id=week.id) }}">
+                    <i class="bi bi-calendar-week me-2"></i> {{ week.title }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        
+        <div class="container-fluid p-3 p-lg-4"> 
+            
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white d-flex align-items-center border-0 p-3">
+                    <i class="bi bi-easel2-fill card-header-icon text-primary"></i>
+                    <h4 class="mb-0">{{ current_week.title }}</h4>
+                </div>
+                <div class="card-body p-3 p-lg-4">
+                    <p class="card-text" style="white-space: pre-wrap; font-size: 1.1rem;">{{ current_week.description }}</p>
+                    
+                    {% if current_week.homework_file %}
+                    <a href="{{ url_for('get_zip_file', filename=current_week.homework_file) }}" class="btn btn-success mt-3">
+                        <i class="bi bi-download me-2"></i> 下载本周作业 (ZIP)
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if current_week.nc_challenges %}
+            <h4 class="mt-4 mb-3"><i class="bi bi-terminal me-2"></i>在线靶机 (NC Links)</h4>
+            <div class="table-responsive-md shadow-sm">
+                <table class="table table-striped table-bordered mb-4 bg-white mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="width: 30%;">题目名称</th>
+                            <th scope="col">nc (点击复制)</th>
+                        </tr>
+                    </thead>
+                <tbody>
+                    {% for chal in current_week.nc_challenges %}
+                    <tr>
+                        <td class="fw-medium">{{ chal.name }}</td>
+                        <td>
+                            <code style="font-size: 1.1em; cursor: pointer;" 
+                                  onclick="copyToClipboard('{{ chal.address }}', this)">
+                                {{ chal.address }}
+                            </code>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        {% if current_week.flag_challenges %}
+        <h4 class="mt-4 mb-3"><i class="bi bi-flag-fill me-2"></i>Flag 验证</h4>
+        <div class="table-responsive-md shadow-sm">
+            <table class="table table-hover align-middle bg-white mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 20%">题目</th>
+                        <th style="width: 50%">Flag</th>
+                        <th style="width: 10%">操作</th>
+                        <th style="width: 20%">EXP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for chal in current_week.flag_challenges %}
+                    {% set is_solved = chal.id in solved_ids %}
+                    <tr class="{% if is_solved %}table-success-subtle{% endif %}">
+                        <td class="fw-medium">{{ chal.name }}</td>
+                        <td>
+                            <input type="text" 
+                                   class="form-control {% if is_solved %}is-valid{% endif %}" 
+                                   id="input-{{ chal.id }}" 
+                                   placeholder="flag{...}" 
+                                   value="{% if is_solved %}✅ 已完成{% endif %}"
+                                   {% if is_solved %}disabled{% endif %}>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary w-100" 
+                                    onclick="submitFlag('{{ current_week.id }}', '{{ chal.id }}')" 
+                                    {% if is_solved %}disabled{% endif %}>
+                                提交
+                            </button>
+                        </td>
+                        <td id="result-{{ chal.id }}">
+                            {% if is_solved %}
+                            <a href="{{ url_for('get_exp_file', filename=chal.exp_file) }}" class="btn btn-outline-success btn-sm" download>
+                                <i class="bi bi-file-earmark-code me-1"></i> 下载 EXP
+                            </a>
+                            {% else %}
+                            <span class="text-muted">验证通过后显示</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        </div> 
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.body.classList.toggle('sidebar-toggled');
+        });
+
+        function submitFlag(weekId, chalId) {
+            const inputElem = document.getElementById('input-' + chalId);
+            const resultElem = document.getElementById('result-' + chalId);
+            const flag = inputElem.value;
+
+            if (!flag) {
+                alert('Flag 不能为空！');
+                return;
+            }
+
+            fetch("{{ url_for('verify_flag') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    week_id: weekId, 
+                    chal_id: chalId, 
+                    flag: flag 
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    inputElem.value = '✅ 已完成';
+                    inputElem.classList.remove('is-invalid');
+                    inputElem.classList.add('is-valid');
+                    inputElem.disabled = true;
+                    inputElem.closest('tr').querySelector('button').disabled = true;
+                    resultElem.innerHTML = `
+                        <a href="${data.exp_link}" class="btn btn-outline-success btn-sm" download>
+                            <i class="bi bi-file-earmark-code me-1"></i> 下载 EXP
+                        </a>`;
+                    inputElem.closest('tr').classList.add('table-success-subtle');
+                } else {
+                    inputElem.classList.add('is-invalid');
+                    // 保持输入框内容，方便修改
+                    alert('Flag 错误: ' + (data.message || '请重试！'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('请求失败');
+            });
+        }
+
+        function copyToClipboard(text, element) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = element.innerHTML;
+                element.innerHTML = '✅ 已复制!';
+                element.classList.add('text-success');
+                setTimeout(() => {
+                    element.innerHTML = originalText;
+                    element.classList.remove('text-success');
+                }, 1500);
+            }).catch(err => {
+                console.error('无法复制: ', err);
+                alert('复制失败');
+            });
+        }
+    </script>
+</body>
+</html>

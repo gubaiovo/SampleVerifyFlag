@@ -1,0 +1,36 @@
+website_title: "web title"
+admin_username: "21232f297a57a5a743894a0e4a801fc3"
+weeks:
+  - id: "week1"
+    title: "Week 1: xxxxxxx"
+    description: |
+      xxxxxx
+    homework_file: "week1.zip"   # challenges/zips/ 
+    
+    nc_challenges: []
+
+    flag_challenges:
+      - id: "w1_c1"
+        name: "pwn1"
+        flag: "flag{asdasdasd}"
+        exp_file: "w1_c1.py"          # challenges/exps/ 
+      
+      - id: "w1_c2"
+        name: "pwn2"
+        flag: "flag{asdasdasd}"
+        exp_file: "w2_c2.py"
+
+  - id: "week2"
+    title: "Week 2: xxxxxx"
+    description: "xxxxxx"
+    homework_file: "week2.zip"
+    
+    nc_challenges: 
+      - name: "name_w2_c1"
+        address: "nc pwn.gubaiovo.com xxxxx"
+
+    flag_challenges:
+      - id: "w2_c1"
+        name: "name_w2_c1"
+        flag: "flag{123123}"
+        exp_file: "w2_c1.py"
