@@ -173,7 +173,27 @@ def get_zip_file(filename):
 
 @app.route('/exp/<filename>')
 def get_exp_file(filename):
-    return send_from_directory(EXPS_DIR, filename, as_attachment=True)
-
+    if 'username' not in session:
+        return "Access Denied: Login required", 403
+    username = session['username']
+    config = load_config()
+    admin_user = config.get('admin_username', '')
+    if username == admin_user:
+        return send_from_directory(EXPS_DIR, filename, as_attachment=True)
+    user_data = get_user_progress(username)
+    solved_ids = {s['chal_id'] for s in user_data.get('solved', [])}
+    is_allowed = False
+    for week in config.get('weeks', []):
+        for chal in week.get('flag_challenges', []):
+            if chal.get('exp_file') == filename and chal['id'] in solved_ids:
+                is_allowed = True
+                break
+        if is_allowed: break
+    
+    if is_allowed:
+        return send_from_directory(EXPS_DIR, filename, as_attachment=True)
+    else:
+        return "Access Denied: You must solve the challenge first.", 403
+    
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
